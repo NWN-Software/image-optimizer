@@ -199,7 +199,7 @@ class BaseFileUpload extends Field
 
             if ($optimize === 'pdf') {
                 if (str_contains($file->getMimeType(), 'image')) {
-                    $image = InterventionImage::make($file);
+                    $image = InterventionImage::make($file->get());
                     $fileContent = $image->encode()->getEncoded();
 
                     $imagick = new \Imagick();
@@ -210,6 +210,7 @@ class BaseFileUpload extends Field
                     $imagick->writeImage($tempPdfPath);
 
                     $filename = self::formatFileName($filename, $optimize);
+
                     Storage::disk($component->getDiskName())->put(
                         $component->getDirectory() . '/' . $filename,
                         file_get_contents($tempPdfPath)
@@ -222,7 +223,7 @@ class BaseFileUpload extends Field
                 str_contains($file->getMimeType(), 'image') &&
                 ($optimize || $resize)
             ) {
-                $image = InterventionImage::make($file);
+                $image = InterventionImage::make($file->get());
 
                 if ($optimize) {
                     $quality = $optimize === 'jpeg' ||
