@@ -17,9 +17,12 @@ use League\Flysystem\UnableToCheckFileExistence;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Throwable;
 use Intervention\Image\ImageManagerStatic as InterventionImage;
+use Filament\Forms\Components\Concerns\HasUploadingMessage;
 
 class BaseFileUpload extends Field
 {
+    use HasUploadingMessage;
+    
     /**
      * @var array<string> | Arrayable | Closure | null
      */
