@@ -16,30 +16,30 @@ use Throwable;
 
 class SpatieMediaLibraryFileUpload extends FileUpload
 {
-    protected string | Closure | null $collection = null;
+    protected string|Closure|null $collection = null;
 
-    protected string | Closure | null $conversion = null;
+    protected string|Closure|null $conversion = null;
 
-    protected string | Closure | null $conversionsDisk = null;
+    protected string|Closure|null $conversionsDisk = null;
 
-    protected bool | Closure $hasResponsiveImages = false;
+    protected bool|Closure $hasResponsiveImages = false;
 
-    protected string | Closure | null $mediaName = null;
+    protected string|Closure|null $mediaName = null;
 
     /**
      * @var array<string, mixed> | Closure | null
      */
-    protected array | Closure | null $customProperties = null;
+    protected array|Closure|null $customProperties = null;
 
     /**
      * @var array<string, array<string, string>> | Closure | null
      */
-    protected array | Closure | null $manipulations = null;
+    protected array|Closure|null $manipulations = null;
 
     /**
      * @var array<string, mixed> | Closure | null
      */
-    protected array | Closure | null $properties = null;
+    protected array|Closure|null $properties = null;
 
     protected function setUp(): void
     {
@@ -62,7 +62,7 @@ class SpatieMediaLibraryFileUpload extends FileUpload
             $component->state($files);
         });
 
-        $this->afterStateHydrated(static function (BaseFileUpload $component, string | array | null $state): void {
+        $this->afterStateHydrated(static function (BaseFileUpload $component, string|array|null $state): void {
             if (is_array($state)) {
                 return;
             }
@@ -195,21 +195,21 @@ class SpatieMediaLibraryFileUpload extends FileUpload
         });
     }
 
-    public function collection(string | Closure | null $collection): static
+    public function collection(string|Closure|null $collection): static
     {
         $this->collection = $collection;
 
         return $this;
     }
 
-    public function conversion(string | Closure | null $conversion): static
+    public function conversion(string|Closure|null $conversion): static
     {
         $this->conversion = $conversion;
 
         return $this;
     }
 
-    public function conversionsDisk(string | Closure | null $disk): static
+    public function conversionsDisk(string|Closure|null $disk): static
     {
         $this->conversionsDisk = $disk;
 
@@ -219,7 +219,7 @@ class SpatieMediaLibraryFileUpload extends FileUpload
     /**
      * @param  array<string, mixed> | Closure | null  $properties
      */
-    public function customProperties(array | Closure | null $properties): static
+    public function customProperties(array|Closure|null $properties): static
     {
         $this->customProperties = $properties;
 
@@ -229,7 +229,7 @@ class SpatieMediaLibraryFileUpload extends FileUpload
     /**
      * @param  array<string, array<string, string>> | Closure | null  $manipulations
      */
-    public function manipulations(array | Closure | null $manipulations): static
+    public function manipulations(array|Closure|null $manipulations): static
     {
         $this->manipulations = $manipulations;
 
@@ -239,14 +239,14 @@ class SpatieMediaLibraryFileUpload extends FileUpload
     /**
      * @param  array<string, mixed> | Closure | null  $properties
      */
-    public function properties(array | Closure | null $properties): static
+    public function properties(array|Closure|null $properties): static
     {
         $this->properties = $properties;
 
         return $this;
     }
 
-    public function responsiveImages(bool | Closure $condition = true): static
+    public function responsiveImages(bool|Closure $condition = true): static
     {
         $this->hasResponsiveImages = $condition;
 
@@ -308,7 +308,7 @@ class SpatieMediaLibraryFileUpload extends FileUpload
         return (bool) $this->evaluate($this->hasResponsiveImages);
     }
 
-    public function mediaName(string | Closure | null $name): static
+    public function mediaName(string|Closure|null $name): static
     {
         $this->mediaName = $name;
 
