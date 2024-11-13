@@ -145,9 +145,6 @@ class BaseFileUpload extends Field
         });
 
         $this->getUploadedFileUsing(static function (BaseFileUpload $component, string $file, string|array|null $storedFileNames): ?array {
-
-            \Log::info('suck it brav');
-
             /** @var FilesystemAdapter $storage */
             $storage = $component->getDisk();
 
@@ -956,8 +953,6 @@ class BaseFileUpload extends Field
      */
     public function getUploadedFiles(): ?array
     {
-        \Log::info('uploaded files?');
-
         $urls = [];
 
         foreach ($this->getState() ?? [] as $fileKey => $file) {
@@ -969,7 +964,7 @@ class BaseFileUpload extends Field
                         'url' => $url,
                         'type' => $file->getMimeType(),
                         'size' => $file->getSize(),
-                        'name' => $file->getClientOriginalName(),
+                        'name' => $file->getFileName(),
                     ];
                 } else {
                     $urls[$fileKey] = null;
