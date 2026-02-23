@@ -24,7 +24,12 @@ class SpatieMediaLibraryFileUpload extends FileUpload
 
     protected bool|Closure $hasResponsiveImages = false;
 
-    protected string|Closure|null $mediaName = null;
+    protected string | Closure | null $mediaName = null;
+
+    /**
+     * @var array<string, mixed> | Closure | null
+     */
+    protected array | Closure | null $customHeaders = null;
 
     /**
      * @var array<string, mixed> | Closure | null
@@ -39,7 +44,9 @@ class SpatieMediaLibraryFileUpload extends FileUpload
     /**
      * @var array<string, mixed> | Closure | null
      */
-    protected array|Closure|null $properties = null;
+    protected array | Closure | null $properties = null;
+
+    protected ?Closure $filterMedia = null;
 
     protected function setUp(): void
     {
@@ -50,7 +57,11 @@ class SpatieMediaLibraryFileUpload extends FileUpload
             $files = $record->load('media')->getMedia($component->getCollection())
                 ->when(
                     ! $component->isMultiple(),
-                    fn (Collection $files): Collection => $files->take(1),
+                    fn (Collection $files): Collection => $files->take(1)
+                        ->when(
+                            $component->hasMediaFilter(),
+                            fn (Collection $files) => $component->getFilteredMedia($files)
+                        ),
                 )
                 ->mapWithKeys(function (Media $file): array {
                     $uuid = $file->getAttributeValue('uuid');
@@ -129,44 +140,65 @@ class SpatieMediaLibraryFileUpload extends FileUpload
             $compressedImage = null;
             $filename = $component->getUploadedFileNameForStorage($file);
             $originalBinaryFile = $file->get();
+            $optimize = $component->getOptimization();
+            $resize = $component->getResize();
+            $maxImageWidth = $component->getMaxImageWidth();
+            $maxImageHeight = $component->getMaxImageHeight();
+            $shouldResize = false;
+            $imageHeight = null;
+            $imageWidth = null;
 
             if (
                 str_contains($file->getMimeType(), 'image') &&
-                ($component->getOptimization() || $component->getResize())
+                ($optimize || $resize || $maxImageWidth || $maxImageHeight)
             ) {
                 $image = InterventionImage::make($originalBinaryFile);
 
-                if ($component->getOptimization()) {
-                    $quality = $component->getOptimization() === 'jpeg' ||
-                        $component->getOptimization() === 'jpg' ? 70 : null;
-
-                    $image->encode($component->getOptimization(), $quality);
+                if ($optimize) {
+                    $quality = $optimize === 'jpeg' ||
+                               $optimize === 'jpg' ? 70 : null;
                 }
 
-                if ($component->getResize()) {
-                    $height = null;
-                    $width = null;
+                if ($maxImageWidth && $image->width() > $maxImageWidth) {
+                    $shouldResize = true;
+                    $imageWidth = $maxImageWidth;
+                }
+
+                if ($maxImageHeight && $image->height() > $maxImageHeight) {
+                    $shouldResize = true;
+                    $imageHeight = $maxImageHeight;
+                }
+
+                if ($resize) {
+                    $shouldResize = true;
 
                     if ($image->height() > $image->width()) {
-                        $height = $image->height() - ($image->height() * ($component->getResize() / 100));
+                        $imageHeight = $image->height() - ($image->height() * ($resize / 100));
                     } else {
-                        $width = $image->width() - ($image->width() * ($component->getResize() / 100));
+                        $imageWidth = $image->width() - ($image->width() * ($resize / 100));
                     }
+                }
 
-                    $image->resize($width, $height, function ($constraint) {
+                if ($shouldResize) {
+                    $image->resize($imageWidth, $imageHeight, function ($constraint) {
                         $constraint->aspectRatio();
                     });
                 }
 
-                $compressedImage = $image->encode();
+                if ($optimize) {
+                    $compressedImage = $image->encode($optimize, $quality);
+                } else {
+                    $compressedImage = $image->encode();
+                }
 
-                $filename = self::formatFileName($filename, $component->getOptimization());
+                $filename = self::formatFileName($filename, $optimize);
             }
 
             /** @var FileAdder $mediaAdder */
             $mediaAdder = $record->addMediaFromString($compressedImage ?? $originalBinaryFile);
 
             $media = $mediaAdder
+                ->addCustomHeaders($component->getCustomHeaders())
                 ->usingFileName($filename)
                 ->usingName($component->getMediaName($file) ?? pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME))
                 ->storingConversionsOnDisk($component->getConversionsDisk() ?? '')
@@ -217,11 +249,28 @@ class SpatieMediaLibraryFileUpload extends FileUpload
     }
 
     /**
+     * @param  array<string, mixed> | Closure | null  $headers
+     */
+    public function customHeaders(array | Closure | null $headers): static
+    {
+        $this->customHeaders = $headers;
+
+        return $this;
+    }
+
+    /**
      * @param  array<string, mixed> | Closure | null  $properties
      */
     public function customProperties(array|Closure|null $properties): static
     {
         $this->customProperties = $properties;
+
+        return $this;
+    }
+
+    public function filterMedia(?Closure $filterMedia): static
+    {
+        $this->filterMedia = $filterMedia;
 
         return $this;
     }
@@ -261,6 +310,7 @@ class SpatieMediaLibraryFileUpload extends FileUpload
         $record
             ->getMedia($this->getCollection())
             ->whereNotIn('uuid', array_keys($this->getState() ?? []))
+            ->when($this->hasMediaFilter(), fn (Collection $files) => $this->getFilteredMedia($files))
             ->each(fn (Media $media) => $media->delete());
     }
 
@@ -277,6 +327,14 @@ class SpatieMediaLibraryFileUpload extends FileUpload
     public function getConversionsDisk(): ?string
     {
         return $this->evaluate($this->conversionsDisk);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getCustomHeaders(): array
+    {
+        return $this->evaluate($this->customHeaders) ?? [];
     }
 
     /**
@@ -301,6 +359,18 @@ class SpatieMediaLibraryFileUpload extends FileUpload
     public function getProperties(): array
     {
         return $this->evaluate($this->properties) ?? [];
+    }
+
+    public function getFilteredMedia(Collection $media): Collection
+    {
+        return $this->evaluate($this->filterMedia, [
+            'media' => $media,
+        ]) ?? $media;
+    }
+
+    public function hasMediaFilter(): bool
+    {
+        return $this->filterMedia instanceof Closure;
     }
 
     public function hasResponsiveImages(): bool
