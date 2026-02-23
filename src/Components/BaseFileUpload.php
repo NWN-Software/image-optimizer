@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as InterventionImage;
 use League\Flysystem\UnableToCheckFileExistence;
-use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Throwable;
 
@@ -835,6 +834,35 @@ class BaseFileUpload extends Field
             ->all();
 
         $this->state($state);
+    }
+
+        /**
+     * @return array<array{name: string, size: int, type: string, url: string} | null> | null
+     */
+    public function getUploadedFiles(): ?array
+    {
+        $urls = [];
+
+        foreach ($this->getState() ?? [] as $fileKey => $file) {
+            if ($file instanceof TemporaryUploadedFile) {
+                $urls[$fileKey] = null;
+
+                continue;
+            }
+
+            $callback = $this->getUploadedFileUsing;
+
+            if (! $callback) {
+                return [$fileKey => null];
+            }
+
+            $urls[$fileKey] = $this->evaluate($callback, [
+                'file' => $file,
+                'storedFileNames' => $this->getStoredFileNames(),
+            ]) ?: null;
+        }
+
+        return $urls;
     }
 
     public function saveUploadedFiles(): void
