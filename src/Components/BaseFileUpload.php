@@ -26,47 +26,49 @@ class BaseFileUpload extends Field
     /**
      * @var array<string> | Arrayable | Closure | null
      */
-    protected array|Arrayable|Closure|null $acceptedFileTypes = null;
+    protected array | Arrayable | Closure | null $acceptedFileTypes = null;
 
-    protected bool|Closure $isDeletable = true;
+    protected bool | Closure $isDeletable = true;
 
-    protected bool|Closure $isDownloadable = false;
+    protected bool | Closure $isDownloadable = false;
 
-    protected bool|Closure $isOpenable = false;
+    protected bool | Closure $isOpenable = false;
 
-    protected bool|Closure $isPreviewable = true;
+    protected bool | Closure $isPreviewable = true;
 
-    protected bool|Closure $isReorderable = false;
+    protected bool | Closure $isReorderable = false;
 
-    protected string|Closure|null $directory = null;
+    protected string | Closure | null $directory = null;
 
-    protected string|Closure|null $diskName = null;
+    protected string | Closure | null $diskName = null;
 
-    protected bool|Closure $isMultiple = false;
+    protected bool | Closure $isMultiple = false;
 
-    protected int|Closure|null $maxSize = null;
+    protected int | Closure | null $maxSize = null;
 
     protected int | Closure | null $minSize = null;
 
     protected int | Closure | null $maxParallelUploads = null;
 
-    protected int|Closure|null $maxFiles = null;
+    protected int | Closure | null $maxFiles = null;
 
-    protected int|Closure|null $minFiles = null;
+    protected int | Closure | null $minFiles = null;
+
+    protected string | Closure | null $optimize = null;
+
+    protected int | Closure | null $resize = null;
 
     protected int | Closure | null $maxImageWidth = null;
 
     protected int | Closure | null $maxImageHeight = null;
+
+    protected bool | Closure $shouldPreserveFilenames = false;
 
     protected bool|Closure $shouldMoveFiles = false;
 
     protected bool | Closure $shouldStoreFiles = true;
 
     protected bool | Closure $shouldFetchFileInformation = true;
-
-    protected string|Closure|null $optimize = null;
-
-    protected int|Closure|null $resize = null;
 
     protected string|Closure|null $fileNamesStatePath = null;
 
@@ -468,14 +470,7 @@ class BaseFileUpload extends Field
         return $this;
     }
 
-    public function fetchFileInformation(bool|Closure $condition = true): static
-    {
-        $this->shouldFetchFileInformation = $condition;
-
-        return $this;
-    }
-
-    public function maxSize(int|Closure|null $size): static
+    public function maxSize(int | Closure | null $size): static
     {
         $this->maxSize = $size;
 
@@ -488,7 +483,7 @@ class BaseFileUpload extends Field
         return $this;
     }
 
-    public function minSize(int|Closure|null $size): static
+    public function minSize(int | Closure | null $size): static
     {
         $this->minSize = $size;
 
@@ -506,10 +501,6 @@ class BaseFileUpload extends Field
         $this->maxParallelUploads = $count;
 
         return $this;
-    }
-    public function getMaxParallelUploads(): ?int
-    {
-        return $this->evaluate($this->maxParallelUploads);
     }
 
     public function maxFiles(int|Closure|null $count): static
@@ -529,6 +520,27 @@ class BaseFileUpload extends Field
     public function multiple(bool | Closure $condition = true): static
     {
         $this->isMultiple = $condition;
+
+        return $this;
+    }
+
+    public function optimize(string | Closure | null $optimize): static
+    {
+        $this->optimize = $optimize;
+
+        return $this;
+    }
+
+    public function resize(int | Closure | null $reductionPercentage): static
+    {
+        $this->resize = $reductionPercentage;
+
+        return $this;
+    }
+
+    public function maxImageWidth(int | Closure | null $width): static
+    {
+        $this->maxImageWidth = $width;
 
         return $this;
     }
@@ -674,6 +686,21 @@ class BaseFileUpload extends Field
     public function getResize(): ?int
     {
         return $this->evaluate($this->resize);
+    }
+
+    public function getMaxImageWidth(): ?int
+    {
+        return $this->evaluate($this->maxImageWidth);
+    }
+
+    public function getMaxImageHeight(): ?int
+    {
+        return $this->evaluate($this->maxImageHeight);
+    }
+
+    public function getMaxParallelUploads(): ?int
+    {
+        return $this->evaluate($this->maxParallelUploads);
     }
 
     public function getVisibility(): string
@@ -972,20 +999,6 @@ class BaseFileUpload extends Field
         return $this->evaluate($this->getUploadedFileNameForStorageUsing, [
             'file' => $file,
         ]);
-    }
-
-    public function optimize(string|Closure|null $optimize): static
-    {
-        $this->optimize = $optimize;
-
-        return $this;
-    }
-
-    public function resize(int|Closure|null $reductionPercentage): static
-    {
-        $this->resize = $reductionPercentage;
-
-        return $this;
     }
 
     /**
