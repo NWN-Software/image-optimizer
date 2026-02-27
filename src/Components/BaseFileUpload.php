@@ -86,6 +86,8 @@ class BaseFileUpload extends Field
 
     protected bool | Closure $isPasteable = true;
 
+    protected int | Closure $temporaryUrlExpirationMinutes = 5;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -173,7 +175,7 @@ class BaseFileUpload extends Field
                 try {
                     $url = $storage->temporaryUrl(
                         $file,
-                        now()->addMinutes(5),
+                        now()->addMinutes($component->getTemporaryUrlExpirationMinutes()),
                     );
                 } catch (Throwable $exception) {
                     // This driver does not support creating temporary URLs.
@@ -1055,5 +1057,17 @@ class BaseFileUpload extends Field
     public function isPasteable(): bool
     {
         return (bool) $this->evaluate($this->isPasteable);
+    }
+
+    public function temporaryUrlExpirationMinutes(int | Closure $minutes): static
+    {
+        $this->temporaryUrlExpirationMinutes = $minutes;
+
+        return $this;
+    }
+
+    public function getTemporaryUrlExpirationMinutes(): int
+    {
+        return $this->evaluate($this->temporaryUrlExpirationMinutes);
     }
 }
