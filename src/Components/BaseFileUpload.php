@@ -762,10 +762,12 @@ class BaseFileUpload extends Field
 
             $name = $this->getName();
 
+            $validationMessages = $this->getValidationMessages();
+
             $validator = Validator::make(
                 [$name => $files],
                 ["{$name}.*" => ['file', ...parent::getValidationRules()]],
-                [],
+                $validationMessages ? ["{$name}.*" => $validationMessages] : [],
                 ["{$name}.*" => $this->getValidationAttribute()],
             );
 
